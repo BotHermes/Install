@@ -4,7 +4,7 @@ Setup and launch of the eStore - Hermes
 The instruction is relevant only for the latest version(for free) which is on the site https://bothermes.com  
 
 # The short version is for hackers:  
-This is a regular ASP.NET Core app.  
+This is a standard ASP.NET Core app.  
 
 # For everyone else a detailed installation example on Debian 9:  
 
@@ -16,37 +16,31 @@ https://dotnet.microsoft.com/download/linux-package-manager/debian9/runtime-2.2.
 
 
 For example I will use free certificates for my site and it will have a false name example.com  
-=====================================================  
 # FREE SSL  
-=====================================================  
+
 apt-get install certbot  
 service nginx stop  
 service apache2 stop  
 certbot certonly --standalone -d example.com  
-=====================================================  
 
 
+# NGINX  
+In the example I use Nginx and so Apache will remove  
 
-
-
-=====================================================  
-# NGINX
-In the example I use Nginx and so Apache will remove
-=====================================================  
 service apache2 stop  
 apt autoremove apache2*  
 apt autoremove nginx*  
 apt install nginx-full nano  
-=====================================================
 
 
 
 
 
-=====================================================
+
+
 # The configuration for the site
 nano /etc/nginx/sites-available/srv0.conf
-=====================================================
+```
 server {
     listen 80;
     server_name example.com;
@@ -86,17 +80,18 @@ server
         proxy_set_header   X-Forwarded-Proto $scheme;
      }
 }
-=====================================================
+```
 
 
 
 
 
-=====================================================
+
+
 # Configuration for the server
-rm /etc/nginx/nginx.conf
-nano /etc/nginx/nginx.conf
-=====================================================
+rm /etc/nginx/nginx.conf  
+nano /etc/nginx/nginx.conf  
+```
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
@@ -128,7 +123,8 @@ http {
 	include /etc/nginx/conf.d/*.conf;
 	include /etc/nginx/sites-enabled/*;
 }
-=====================================================
+```
+
 
 
 
@@ -141,18 +137,19 @@ ln -s /etc/nginx/sites-available/srv0.conf /etc/nginx/sites-enabled/srv0.cong
 nginx -t
 
 # Running Nginx
-service nginx start
-service nginx restart
-service nginx status
+service nginx start  
+service nginx restart  
+service nginx status  
 
 
 
 
 
-=====================================================
-# CREATING A SERVICE (paths in small letters) (do not forget to specify the working directory - WorkingDirectory)
-nano /etc/systemd/system/bothermes.service
-=====================================================
+
+# CREATING A SERVICE
+(paths in small letters) (do not forget to specify the working directory - WorkingDirectory)  
+nano /etc/systemd/system/bothermes.service  
+```
 [Unit]
 Description=Example.COM .NET Web API App running on Debian
 [Service]
@@ -169,48 +166,47 @@ Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
 Environment=DOTNET_CLI_TELEMETRY_OPTOUT=false
 [Install]
 WantedBy=multi-user.target
-=====================================================
+```
 
 
 
-
-
-=====================================================
 # Service registration
-=====================================================
-systemctl enable bothermes.service
-=====================================================
+
+systemctl enable bothermes.service  
 
 
 
 
 
-=====================================================
-# Site update / download  https://bothermes.com/
-=====================================================
-service bothermes stop
-rm -rf /var/www/html/*
 
-Here you copy the application to the server in a convenient way
 
-Be careful if you update the site you can not delete the database of customers, products and others. 
-All databases have an extension."db " example of a command that will not delete the database.
-find /var/www/html -type f ! -iname "*.db" -delete
+# Site update / download  
+https://bothermes.com/
 
-Be sure to set the correct access to the application files
+service bothermes stop  
+rm -rf /var/www/html/*  
+
+Here you copy the application to the server in a convenient way  
+
+Be careful if you update the site you can not delete the database of customers, products and   others.
+All databases have an extension."db " example of a command that will not delete the database.  
+
+```
+find /var/www/html -type f ! -iname "*.db" -delete  
+```
+Be sure to set the correct access to the application files  
 chown -R www-data:www-data /var/www/html/
-=====================================================
 
 
 
 
 
-=====================================================
+
 #  Edit the settings file "HermesOptions.json"
-In this example I will use a non standard port to connect the bot to the telegram API 8443
-nano /var/www/html/HermesOptions.json
-ManagerID && AdminID - I will change later when I look them up in the working bot.
-=====================================================
+In this example I will use a non standard port to connect the bot to the telegram API 8443  
+nano /var/www/html/HermesOptions.json  
+ManagerID && AdminID - I will change later when I look them up in the working bot.  
+```
 {
   "AllowedHosts": "*",
   "Url": "https://example.com:8443/{0}",
@@ -227,115 +223,85 @@ ManagerID && AdminID - I will change later when I look them up in the working bo
   "EventError": "true",
   "EventWarnings": "true"
 }
-=====================================================
+```
 
 
-
-
-
-=====================================================
 # Launch and registration of the bot
-=====================================================
-service bothermes start
-service bothermes status
-=====================================================
+
+service bothermes start  
+service bothermes status  
 
 
 
 
 
 
-=====================================================
-# TELEGRAM 
+
+
+# TELEGRAM
 Register Webhook on your port, And check how everything works
-=====================================================
-https://api.telegram.org/bot{ API KEY }/setWebhook?url=https://example.com:8443/api/message/update
-https://api.telegram.org/bot{ API KEY }/getWebhookInfo
-=====================================================
+
+https://api.telegram.org/bot{ API KEY }/setWebhook?url=https://example.com:8443/api/message/update  
+https://api.telegram.org/bot{ API KEY }/getWebhookInfo  
 
 
+# Add a bot in contact and send the command "/info" to see your ID.  
+Change it in the settings and restart the bot.  
 
-
-
-
-=====================================================
-# Add a bot in contact and send the command "/info" to see your ID. 
-Change it in the settings and restart the bot.
-=====================================================
 service bothermes stop
 nano /var/www/html/HermesOptions.json
 
---
+```
   "ManagerID": "4654547897",
   "AdminID": "4654547897",
---  
+```
 
-service bothermes restart
-=====================================================
-
+service bothermes restart  
 
 
 
 
-=====================================================
+
+
+
 # LAST STEP
-=====================================================
-Now you have access to the admin panel
-https://example.com:8443/admin/
 
-On the page you will see an access token of 6-7 digits. 
-They should be sent to the bot command
+Now you have access to the admin panel  
+https://example.com:8443/admin/  
+
+On the page you will see an access token of 6-7 digits.  
+They should be sent to the bot command  
+```
 /auth@123456
+```
 
 After the bot reports that access is open you can click the unlock button on the site
-=====================================================
 
 
-
-
-
-=====================================================
 # OTHER INFORMATION
-There is a list of standard commands that are better 
-to immediately add to the bot control menu via BotFather
-=====================================================
-/setcommands
+There is a list of standard commands that are better
+to immediately add to the bot control menu via BotFather  
+/setcommands  
+
+```
 help - Help
 settings - Settings
 menu - Menu
 info - About me
-=====================================================
+```
 
-
-
-
-
-=====================================================
-# SQL BROSWER - TOOLS
+# SQL BROSWER - TOOLS  
 If you are wondering what is contained in the DB
-=====================================================
-https://sqlitebrowser.org/
-https://sqlitebrowser.org/dl/#windows
-=====================================================
+
+https://sqlitebrowser.org/  
+https://sqlitebrowser.org/dl/#windows  
 
 
-
-
-
-=====================================================
 # This is the end
-=====================================================
-It remains to add the addresses of wallets for receiving money and add goods. 
-Fill in the section with news and rules for customers. 
-And of course invite friends to your store.
 
-If you are experiencing difficulties with setting up and running your store-we will help you. 
-More information on the website https://bothermes.com
-=====================================================
+It remains to add the addresses of wallets for receiving money and add goods.  
+Fill in the section with news and rules for customers.  
+And of course invite friends to your store.  
 
-
-
-
-
-
-
+If you are experiencing difficulties with setting up and running your store-we will help you.  
+More information on the website https://bothermes.com  
